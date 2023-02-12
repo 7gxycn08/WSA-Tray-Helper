@@ -7,7 +7,11 @@ Start/Stop and Monitor WSA from System Tray.
 
 
 
-https://user-images.githubusercontent.com/121936658/218319495-351df052-cad3-4510-94ba-d28d6a08f78b.mp4
+
+
+https://user-images.githubusercontent.com/121936658/218319665-e6594196-18ea-4fd8-8a58-9bff0078364b.mp4
+
+
 
 
 
