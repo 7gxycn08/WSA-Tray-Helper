@@ -5,8 +5,8 @@ Start/Stop and Monitor Windows Subsystem for Android status from System Tray.
 ## Preview:
 
 
+![wsatrayhelper](https://github.com/7gxycn08/WSA-Tray-Helper/assets/121936658/86efeb62-b903-4cc4-9069-dc62ecf7baea)
 
-![Screenshot 2023-12-01 104300](https://github.com/7gxycn08/WSA-Tray-Helper/assets/121936658/11c00c76-3ef0-44f5-ad3d-8741d7b3ea56)
 
 
 ## Contributing
