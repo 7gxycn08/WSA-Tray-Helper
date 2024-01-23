@@ -5,7 +5,6 @@ import sys
 import subprocess
 import ctypes
 import win32com.client
-from datetime import datetime, timedelta
 import os
 
 class SystemTrayApp():
@@ -138,7 +137,8 @@ class SystemTrayApp():
             except Exception:
                 return False
         except Exception as e:
-            QMessageBox.warning(parent=None, title="Error", text=f"Task installation failed: {e}", buttons=QMessageBox.Ok)
+            QMessageBox.warning(parent=None, title="Error", text=f"Task installation failed: {e}",
+                                buttons=QMessageBox.Ok)
 
     def register_as_task(self):
         try:
@@ -150,11 +150,8 @@ class SystemTrayApp():
             taskDef = scheduler.NewTask(0)
             taskDef.RegistrationInfo.Description = 'Start WSA-Tray-Helper at Boot'
 
-            trigger = taskDef.Triggers.Create(1)
+            trigger = taskDef.Triggers.Create(9)
             trigger.Id = 'LogonTriggerId'
-
-            start_time = datetime.now() + timedelta(minutes=1)
-            trigger.StartBoundary = start_time.isoformat()
 
             execAction = taskDef.Actions.Create(0)
             execAction.Path = self.script_path
@@ -179,8 +176,10 @@ class SystemTrayApp():
             self.toggle_start_at_boot()
             self.boot_tick_status = True
         except Exception as e:
-            QMessageBox.warning(parent=None,title="Error", text=f"Task installation failed: {e}", buttons=QMessageBox.Ok)
-
+            import traceback
+            traceback.print_exc()
+            QMessageBox.warning(parent=None,title="Error", text=f"Task installation failed: {e}",
+                                buttons=QMessageBox.Ok)
     def remove_task(self):
         try:
             scheduler = win32com.client.Dispatch('Schedule.Service')
