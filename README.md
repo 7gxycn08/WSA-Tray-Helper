@@ -1,5 +1,5 @@
 # WSA-Tray-Helper
-**Start/Stop and Monitor Windows Subsystem for Android status from System Tray.**
+**Start/Stop and Monitor Windows Subsystem for Android from System Tray.**
 
 
 ## Preview:
