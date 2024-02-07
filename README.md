@@ -5,7 +5,8 @@
 ## Preview:
 
 
-![wsatrayhelper](https://github.com/7gxycn08/WSA-Tray-Helper/assets/121936658/86efeb62-b903-4cc4-9069-dc62ecf7baea)
+
+![wsanew](https://github.com/7gxycn08/WSA-Tray-Helper/assets/121936658/327e0b39-cb3e-41f0-bbe7-3d7b16e2f82d)
 
 
 
