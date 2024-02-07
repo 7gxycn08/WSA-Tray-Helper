@@ -1,15 +1,17 @@
-from PyQt5.QtWidgets import QMenu, QSystemTrayIcon, QApplication, QMessageBox, QAction
-from PyQt5.QtGui import QIcon
-from PyQt5.QtCore import QTimer, QSettings
+from PyQt6.QtWidgets import QMenu, QSystemTrayIcon, QApplication, QMessageBox
+from PyQt6.QtGui import QIcon, QAction
+from PyQt6.QtCore import QTimer, QSettings, Qt
 import sys
 import subprocess
 import ctypes
 import win32com.client
 import os
 
-class SystemTrayApp():
+
+class SystemTrayApp:
     def __init__(self):
         super().__init__()
+        self.exception_msg = None
         self.boot_tick_status = None
         self.script_path = f"{os.path.abspath(sys.argv[0])}"
         self.task_name = "WSA-Tray-Helper"
@@ -19,58 +21,65 @@ class SystemTrayApp():
         self.settings = QSettings("7gxycn08@Github", "WSA-Tray-Helper")
         self.tray_icon = QSystemTrayIcon()
         self.tray_icon.setToolTip("WSA Tray Helper")
-        self.tray_icon.setIcon(QIcon(f"dependancies\\Resources\\Icon1.ico"))
+        self.tray_icon.setIcon(QIcon(r"dependancies/Resources/Icon1.ico"))
         self.timer = QTimer()
         self.timer.timeout.connect(self.check_process)
         self.timer.start(5000)  # 5 seconds
         self.menu = QMenu()
+        self.menu.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint, True)
+        self.menu.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+        self.menu.setWindowFlags(self.menu.windowFlags() | Qt.WindowType.FramelessWindowHint)
         self.start_at_boot_action = QAction('Start at Boot', self.menu)
         self.start_at_boot_action.setCheckable(True)
         self.start_at_boot_action.setChecked(self.settings.value("start_at_boot", False, type=bool))
         self.start_at_boot_action.triggered.connect(self.initiate_task)
         self.menu.addAction(self.start_at_boot_action)
-        self.menu.addAction(QIcon(f"dependancies\\Resources\\Icon1.ico"),"Start WSA").triggered.connect(self.startwsa)
-        self.menu.addAction(QIcon(f"dependancies\\Resources\\stop.ico"),"Stop WSA").triggered.connect(self.stopwsa)
+        self.menu.addAction(QIcon(r"dependancies/Resources/Icon1.ico"), "Start WSA").triggered.connect(self.start_wsa)
+        self.menu.addAction(QIcon(r"dependancies/Resources/stop.ico"), "Stop WSA").triggered.connect(self.stop_wsa)
         self.menu.addSeparator()
-        (self.menu.addAction(QIcon(f"dependancies\\Resources\\folder.ico"), "WSA Files")
-         .triggered.connect(lambda: self.open_wsafiles()))
-        (self.menu.addAction(QIcon(f"dependancies\\Resources\\settings.ico"), "WSA Settings")
-         .triggered.connect(lambda: self.open_wsasettings()))
-        (self.menu.addAction(QIcon(f"dependancies\\Resources\\android.ico"), "Android Settings")
-         .triggered.connect(lambda: self.open_androidsettings()))
+        (self.menu.addAction(QIcon(r"dependancies/Resources/folder.ico"), "WSA Files")
+         .triggered.connect(lambda: self.open_wsa_files()))
+        (self.menu.addAction(QIcon(r"dependancies/Resources/settings.ico"), "WSA Settings")
+         .triggered.connect(lambda: self.open_wsa_settings()))
+        (self.menu.addAction(QIcon(r"dependancies/Resources/android.ico"), "Android Settings")
+         .triggered.connect(lambda: self.open_android_settings()))
         self.menu.addSeparator()
-        self.menu.addAction(QIcon(f"dependancies\\Resources\\about.ico"), "About").triggered.connect(
+        self.menu.addAction(QIcon(r"dependancies/Resources/about.ico"), "About").triggered.connect(
             self.about_function)
-        self.menu.addAction(QIcon(f"dependancies\\Resources\\exit.ico"),"Exit").triggered.connect(
+        self.menu.addAction(QIcon(r"dependancies/Resources/exit.ico"), "Exit").triggered.connect(
             self.exit_application)
         self.tray_icon.setContextMenu(self.menu)
         self.tray_icon.show()
         self.run_initially_at_start()
-        self.app.exec_()
+        with open('custom.css', 'r') as file:
+            self.menu.setStyleSheet(file.read())
+        self.app.exec()
 
     def exit_application(self):
         self.app.exit(0)
-    def startwsa(self):
+
+    def start_wsa(self):
         try:
             subprocess.Popen("WSAClient.exe /launch wsa://system",
                              shell=True, creationflags=subprocess.CREATE_NO_WINDOW)
         except:
-            QMessageBox.warning(parent=None, title=f"WSA Not Running or Not Installed.", buttons=QMessageBox.Ok)
+            QMessageBox.warning(parent=None, title=f"WSA Not Running or Not Installed.",
+                                buttons=QMessageBox.StandardButton.Ok)
 
-    def stopwsa(self):
+    def stop_wsa(self):
         subprocess.Popen("WSAClient.exe /shutdown", shell=True, creationflags=subprocess.CREATE_NO_WINDOW)
         subprocess.Popen("taskkill /F /IM vmcompute.exe", shell=True, creationflags=subprocess.CREATE_NO_WINDOW)
         subprocess.Popen("taskkill /F /IM WSACrashUploader.exe", shell=True,
                          creationflags=subprocess.CREATE_NO_WINDOW)
 
-    def open_wsasettings(self):
+    def open_wsa_settings(self):
         subprocess.Popen("start wsa-settings://", shell=True, creationflags=subprocess.CREATE_NO_WINDOW)
 
-    def open_wsafiles(self):
+    def open_wsa_files(self):
         subprocess.Popen("WSAClient.exe /launch wsa://com.android.documentsui",
                          shell=True, creationflags=subprocess.CREATE_NO_WINDOW)
 
-    def open_androidsettings(self):
+    def open_android_settings(self):
         subprocess.Popen("WSAClient.exe /launch wsa://com.android.settings",
                          shell=True, creationflags=subprocess.CREATE_NO_WINDOW)
 
@@ -104,21 +113,17 @@ class SystemTrayApp():
             return False
 
         except Exception as e:
-            QMessageBox.warning(parent=None, title="Error", text=f"An error occurred: {str(e)}", buttons=QMessageBox.Ok)
+            self.exception_msg = f"An error occurred: {e}"
+            self.show_msg_box()
 
     def check_process(self):
-        try:
-            checked_process = self.is_process_running()
-            if checked_process:
-                self.tray_icon.setIcon(QIcon(f"dependancies\\Resources\\Icon1.ico"))
-                self.tray_icon.setToolTip("WSA Running")
-            else:
-                self.tray_icon.setIcon(QIcon(f"dependancies\\Resources\\stop.ico"))
-                self.tray_icon.setToolTip("WSA Not Running")
-        except:
-            QMessageBox.warning(parent=None, title="Error",
-                                text=f"Error occurred while checking the process {self.process_name}.",
-                                buttons=QMessageBox.Ok)
+        checked_process = self.is_process_running()
+        if checked_process:
+            self.tray_icon.setIcon(QIcon(r"dependancies/Resources/Icon1.ico"))
+            self.tray_icon.setToolTip("WSA Running")
+        else:
+            self.tray_icon.setIcon(QIcon(r"dependancies/Resources/stop.ico"))
+            self.tray_icon.setToolTip("WSA Not Running")
 
     def toggle_start_at_boot(self):
         checked = self.start_at_boot_action.isChecked()
@@ -137,8 +142,8 @@ class SystemTrayApp():
             except Exception:
                 return False
         except Exception as e:
-            QMessageBox.warning(parent=None, title="Error", text=f"Task installation failed: {e}",
-                                buttons=QMessageBox.Ok)
+            self.exception_msg = f"Task installation failed: {e}"
+            self.show_msg_box()
 
     def register_as_task(self):
         try:
@@ -176,10 +181,9 @@ class SystemTrayApp():
             self.toggle_start_at_boot()
             self.boot_tick_status = True
         except Exception as e:
-            import traceback
-            traceback.print_exc()
-            QMessageBox.warning(parent=None,title="Error", text=f"Task installation failed: {e}",
-                                buttons=QMessageBox.Ok)
+            self.exception_msg = f"Task installation failed: {e}"
+            self.show_msg_box()
+
     def remove_task(self):
         try:
             scheduler = win32com.client.Dispatch('Schedule.Service')
@@ -193,13 +197,12 @@ class SystemTrayApp():
                 self.boot_tick_status = False
 
             except Exception as e:
-                QMessageBox.warning(parent=None,
-                                    title="Error", text=f'Error removing task "{self.task_name}": {str(e)}',
-                                    buttons=QMessageBox.Ok)
+                self.exception_msg = f"Error removing task: {self.task_name} {e}"
+                self.show_msg_box()
 
         except Exception as e:
-            QMessageBox.warning(parent=None, title="Error", text=f'Error connecting to Task Scheduler: {str(e)}',
-                                buttons=QMessageBox.Ok)
+            self.exception_msg = f"Error connecting to Task Scheduler: {self.task_name} {e}"
+            self.show_msg_box()
 
     def run_initially_at_start(self):
         try:
@@ -212,8 +215,8 @@ class SystemTrayApp():
                 self.toggle_start_at_boot()
                 self.boot_tick_status = False
         except Exception as e:
-            QMessageBox.warning(parent=None,title="Error", text=f"Exception in run_initially {e}",
-                                buttons=QMessageBox.Ok)
+            self.exception_msg = f"run_initially {e}"
+            self.show_msg_box()
 
     def initiate_task(self):
         try:
@@ -226,9 +229,21 @@ class SystemTrayApp():
                 self.start_at_boot_action.setChecked(True)
                 self.toggle_start_at_boot()
         except Exception as e:
-            QMessageBox.warning(parent=None,title="Error", text=f"An exception occurred: {e}", buttons=QMessageBox.Ok)
+            self.exception_msg = f"initiate_task {e}"
+            self.show_msg_box()
+
+    def show_msg_box(self):
+        warning_message_box = QMessageBox()
+        warning_message_box.setWindowTitle("WSA-Tray Error")
+        warning_message_box.setWindowIcon(QIcon(r"dependancies/Resources/Icon1.ico"))
+        warning_message_box.setFixedSize(400, 200)
+        warning_message_box.setIcon(QMessageBox.Icon.Critical)
+        warning_message_box.setText(f"{self.exception_msg}")
+        warning_message_box.exec()
+
 
 if __name__ == '__main__':
+    ctypes.windll.shcore.SetProcessDpiAwareness(1)
     app = QApplication(sys.argv)
     tray_app = SystemTrayApp()
     sys.exit(tray_app.exit_application())
