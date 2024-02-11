@@ -6,11 +6,15 @@ import subprocess
 import ctypes
 import win32com.client
 import os
+import configparser
+import time
+import threading
 
 
 class SystemTrayApp:
     def __init__(self):
         super().__init__()
+        self.ran_command = None
         self.exception_msg = None
         self.boot_tick_status = None
         self.script_path = f"{os.path.abspath(sys.argv[0])}"
@@ -21,7 +25,7 @@ class SystemTrayApp:
         self.settings = QSettings("7gxycn08@Github", "WSA-Tray-Helper")
         self.tray_icon = QSystemTrayIcon()
         self.tray_icon.setToolTip("WSA Tray Helper")
-        self.tray_icon.setIcon(QIcon(r"dependancies/Resources/Icon1.ico"))
+        self.tray_icon.setIcon(QIcon(r"dependencies/Resources/Icon1.ico"))
         self.timer = QTimer()
         self.timer.timeout.connect(self.check_process)
         self.timer.start(5000)  # 5 seconds
@@ -29,31 +33,56 @@ class SystemTrayApp:
         self.menu.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint, True)
         self.menu.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.menu.setWindowFlags(self.menu.windowFlags() | Qt.WindowType.FramelessWindowHint)
+
         self.start_at_boot_action = QAction('Start at Boot', self.menu)
         self.start_at_boot_action.setCheckable(True)
         self.start_at_boot_action.setChecked(self.settings.value("start_at_boot", False, type=bool))
         self.start_at_boot_action.triggered.connect(self.initiate_task)
         self.menu.addAction(self.start_at_boot_action)
-        self.menu.addAction(QIcon(r"dependancies/Resources/Icon1.ico"), "Start WSA").triggered.connect(self.start_wsa)
-        self.menu.addAction(QIcon(r"dependancies/Resources/stop.ico"), "Stop WSA").triggered.connect(self.stop_wsa)
+
+        self.command_at_runtime_action = QAction('Custom Commands', self.menu)
+        self.command_at_runtime_action.setCheckable(True)
+        self.command_at_runtime_action.setChecked(self.settings.value("command_at_runtime", False, type=bool))
+        self.command_at_runtime_action.triggered.connect(self.save_action_state)
+        self.menu.addAction(self.command_at_runtime_action)
+
+        self.menu.addAction(QIcon(r"dependencies/Resources/Icon1.ico"), "Start WSA").triggered.connect(self.start_wsa)
+        self.menu.addAction(QIcon(r"dependencies/Resources/stop.ico"), "Stop WSA").triggered.connect(self.stop_wsa)
         self.menu.addSeparator()
-        (self.menu.addAction(QIcon(r"dependancies/Resources/folder.ico"), "WSA Files")
+        (self.menu.addAction(QIcon(r"dependencies/Resources/folder.ico"), "WSA Files")
          .triggered.connect(lambda: self.open_wsa_files()))
-        (self.menu.addAction(QIcon(r"dependancies/Resources/settings.ico"), "WSA Settings")
+        (self.menu.addAction(QIcon(r"dependencies/Resources/settings.ico"), "WSA Settings")
          .triggered.connect(lambda: self.open_wsa_settings()))
-        (self.menu.addAction(QIcon(r"dependancies/Resources/android.ico"), "Android Settings")
+        (self.menu.addAction(QIcon(r"dependencies/Resources/android.ico"), "Android Settings")
          .triggered.connect(lambda: self.open_android_settings()))
         self.menu.addSeparator()
-        self.menu.addAction(QIcon(r"dependancies/Resources/about.ico"), "About").triggered.connect(
+        self.menu.addAction(QIcon(r"dependencies/Resources/command.ico"), "Open Commands Config").triggered.connect(
+            self.open_commands_file)
+        self.menu.addAction(QIcon(r"dependencies/Resources/about.ico"), "About").triggered.connect(
             self.about_function)
-        self.menu.addAction(QIcon(r"dependancies/Resources/exit.ico"), "Exit").triggered.connect(
+        self.menu.addAction(QIcon(r"dependencies/Resources/exit.ico"), "Exit").triggered.connect(
             self.exit_application)
         self.tray_icon.setContextMenu(self.menu)
         self.tray_icon.show()
         self.run_initially_at_start()
-        with open('custom.css', 'r') as file:
+        with open('dependencies/Resources/custom.css', 'r') as file:
             self.menu.setStyleSheet(file.read())
+        self.config = configparser.ConfigParser()
+        self.config.read(r'Dependencies\Commands.ini')
+        self.list_str = self.config['ADB_COMMANDS']['at_start']
+        self.commands_list = self.list_str.split(', ') if self.list_str else []
+        self.ran_command = self.command_at_runtime_action.isEnabled()
         self.app.exec()
+
+    def open_commands_file(self):
+        try:
+            subprocess.Popen("Notepad dependencies/Commands.ini", creationflags=subprocess.CREATE_NO_WINDOW)
+        except Exception as e:
+            self.exception_msg = f"Error Opening Notepad: {e}"
+            self.show_msg_box()
+
+    def save_action_state(self):
+        self.settings.setValue("command_at_runtime", self.command_at_runtime_action.isChecked())
 
     def exit_application(self):
         self.app.exit(0)
@@ -62,9 +91,9 @@ class SystemTrayApp:
         try:
             subprocess.Popen("WSAClient.exe /launch wsa://system",
                              shell=True, creationflags=subprocess.CREATE_NO_WINDOW)
-        except:
-            QMessageBox.warning(parent=None, title=f"WSA Not Running or Not Installed.",
-                                buttons=QMessageBox.StandardButton.Ok)
+        except Exception as e:
+            self.exception_msg = f"start_wsa {e}"
+            self.show_msg_box()
 
     def stop_wsa(self):
         subprocess.Popen("WSAClient.exe /shutdown", shell=True, creationflags=subprocess.CREATE_NO_WINDOW)
@@ -116,14 +145,30 @@ class SystemTrayApp:
             self.exception_msg = f"An error occurred: {e}"
             self.show_msg_box()
 
+    def process_commands(self):
+        if len(self.commands_list) == 0:
+            return
+        elif self.command_at_runtime_action.isEnabled():
+            self.ran_command = False
+            for command in self.commands_list:
+                subprocess.call(command, creationflags=subprocess.CREATE_NO_WINDOW)
+                time.sleep(3)
+
     def check_process(self):
         checked_process = self.is_process_running()
         if checked_process:
-            self.tray_icon.setIcon(QIcon(r"dependancies/Resources/Icon1.ico"))
+            if self.ran_command:
+
+                threading.Thread(target=self.process_commands, daemon=True).start()
+            self.tray_icon.setIcon(QIcon(r"dependencies/Resources/Icon1.ico"))
             self.tray_icon.setToolTip("WSA Running")
         else:
-            self.tray_icon.setIcon(QIcon(r"dependancies/Resources/stop.ico"))
+            self.tray_icon.setIcon(QIcon(r"dependencies/Resources/stop.ico"))
             self.tray_icon.setToolTip("WSA Not Running")
+            if self.command_at_runtime_action.isChecked():
+                self.ran_command = True
+            else:
+                self.ran_command = False
 
     def toggle_start_at_boot(self):
         checked = self.start_at_boot_action.isChecked()
@@ -235,7 +280,7 @@ class SystemTrayApp:
     def show_msg_box(self):
         warning_message_box = QMessageBox()
         warning_message_box.setWindowTitle("WSA-Tray Error")
-        warning_message_box.setWindowIcon(QIcon(r"dependancies/Resources/Icon1.ico"))
+        warning_message_box.setWindowIcon(QIcon(r"dependencies/Resources/Icon1.ico"))
         warning_message_box.setFixedSize(400, 200)
         warning_message_box.setIcon(QMessageBox.Icon.Critical)
         warning_message_box.setText(f"{self.exception_msg}")
