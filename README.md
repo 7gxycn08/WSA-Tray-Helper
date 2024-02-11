@@ -18,21 +18,10 @@
 - **Under at_start key add your cmd commands ex: `at_start = command1, command2, command3` space sensitive.**
 - **Then check the `Custom Commands` box In tray menu.**
 - **When WSA starts the commands will be executed in the background.**
-
-
-**Another example:**
-
-
-**You can run stuff like:**
-
-
-**`adb connect 127.0.0.1:58526`**
-
-
-**`adb shell sh /storage/emulated/0/Android/data/moe.shizuku.privileged.api/start.sh`**
-
-
-**`adb kill-server`**
+- **You can run stuff like:**
+- **`adb connect 127.0.0.1:58526`**
+- **`adb shell sh /storage/emulated/0/Android/data/moe.shizuku.privileged.api/start.sh`**
+- **`adb kill-server`**
 
 
 ## Contributing
