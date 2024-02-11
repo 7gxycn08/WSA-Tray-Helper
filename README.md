@@ -20,6 +20,21 @@
 - **When WSA starts the commands will be executed in the background.**
 
 
+**Another example:**
+
+
+**You can run stuff like:**
+
+
+**`adb connect 127.0.0.1:58526`**
+
+
+**`adb shell sh /storage/emulated/0/Android/data/moe.shizuku.privileged.api/start.sh`**
+
+
+**`adb kill-server`**
+
+
 ## Contributing
 
 **Pull requests are welcome. For major changes, please open an issue first**
