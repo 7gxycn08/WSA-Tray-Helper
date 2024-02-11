@@ -14,10 +14,10 @@
 
 
 # How to add custom commands:
-- In Dependencies folder there is a file called `Commands.ini`
-- Under at_start key add your cmd commands ex: `at_start = command1, command2, command3` space sensitive.
-- Then check the `Custom Commands` box In tray menu.
-- When WSA starts the commands will be executed in the background.
+- **In Dependencies folder there is a file called `Commands.ini`**
+- **Under at_start key add your cmd commands ex: `at_start = command1, command2, command3` space sensitive.**
+- **Then check the `Custom Commands` box In tray menu.**
+- **When WSA starts the commands will be executed in the background.**
 
 
 ## Contributing
