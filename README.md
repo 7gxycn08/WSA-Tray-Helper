@@ -5,7 +5,19 @@
 ## Preview:
 
 
-![wsanew](https://github.com/7gxycn08/WSA-Tray-Helper/assets/121936658/bbd90b63-d960-42bd-9afa-56a8fa856297)
+![Screenshot 2024-02-11 221220](https://github.com/7gxycn08/WSA-Tray-Helper/assets/121936658/23a7e698-4a90-4f49-b043-f54abc8a8ee5)
+
+
+# v1.0.0.9 New Feature:
+- **Added ability to run custom commands at WSA start up**
+- **Full list of changes in** ![Releases](https://github.com/7gxycn08/WSA-Tray-Helper/releases/tag/v1.0.0.9)
+
+
+# How to add custom commands:
+- In Dependencies folder there is a file called `Commands.ini`
+- Under at_start key add your cmd commands ex: `at_start = command1, command2, command3` space sensitive.
+- Then check the `Custom Commands` box In tray menu.
+- When WSA starts the commands will be executed in the background.
 
 
 ## Contributing
