@@ -9,7 +9,7 @@
 
 
 # v1.0.0.9 New Feature:
-- **Added ability to run custom commands at WSA start up**
+- **Added ability to run custom commands at WSA start up.**
 - **Full list of changes in** ![Releases](https://github.com/7gxycn08/WSA-Tray-Helper/releases/tag/v1.0.0.9)
 
 
