@@ -5,12 +5,13 @@
 ## Preview:
 
 
-![Screenshot 2024-02-11 221220](https://github.com/7gxycn08/WSA-Tray-Helper/assets/121936658/23a7e698-4a90-4f49-b043-f54abc8a8ee5)
+![Screenshot 2024-02-12 085831](https://github.com/7gxycn08/WSA-Tray-Helper/assets/121936658/407b6036-5cb5-4b1f-9737-f69b2324f29d)
 
 
-# v1.0.0.9 New Feature:
-- **Added ability to run custom commands at WSA start up.**
-- **Full list of changes in** ![Releases](https://github.com/7gxycn08/WSA-Tray-Helper/releases/tag/v1.0.0.9)
+# v1.0.1.0 New Features:
+- **Added WSA Backup and Restore options.**
+- **Backups and restores WSA virtual drive contained in `LocalCache` folder.**
+- **Full list of changes in** ![Releases](https://github.com/7gxycn08/WSA-Tray-Helper/releases/tag/v1.0.1.0)
 
 
 # How to add custom commands:
