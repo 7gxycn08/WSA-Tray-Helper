@@ -2,7 +2,17 @@
 **Start/Stop and Monitor Windows Subsystem for Android from System Tray.**
 
 
+**When WSA is `running` the tray Icon will look like this** ![wsaon](https://github.com/7gxycn08/WSA-Tray-Helper/assets/121936658/36ecc638-4fc4-4327-b458-91caa27ebd4c)
+
+
+**When WSA is `not running` the tray Icon will look like this** ![stop](https://github.com/7gxycn08/WSA-Tray-Helper/assets/121936658/6fe31d62-831a-425e-85ab-518bfb40789e)
+
+
+
+
 ## Preview:
+
+
 
 
 ![Screenshot 2024-02-12 085831](https://github.com/7gxycn08/WSA-Tray-Helper/assets/121936658/407b6036-5cb5-4b1f-9737-f69b2324f29d)
