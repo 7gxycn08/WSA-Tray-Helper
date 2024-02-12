@@ -12,7 +12,7 @@
 - **Added WSA Backup and Restore options.**
 - **Backup and restore WSA virtual drive contained in `LocalCache` folder locally.**
 - **Useful to preserve WSA internal files and apps when doing a complete reinstall.**
-- **Due to WSA limitations apps will required to be reinstalled to show up again In windows but app data will be preserved.** 
+- **Due to WSA limitations apps will require to be reinstalled to show up again In windows but app data will be preserved.** 
 - **Full list of changes in** ![Releases](https://github.com/7gxycn08/WSA-Tray-Helper/releases/tag/v1.0.1.0)
 
 
