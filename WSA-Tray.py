@@ -1,6 +1,7 @@
 from PyQt6.QtWidgets import QMenu, QSystemTrayIcon, QApplication, QMessageBox
 from PyQt6.QtGui import QIcon, QAction
-from PyQt6.QtCore import QTimer, QSettings, Qt
+from PyQt6.QtCore import QTimer, QSettings, Qt, pyqtSignal, QObject, QCoreApplication
+from threading import Thread
 import sys
 import subprocess
 import ctypes
@@ -8,12 +9,20 @@ import win32com.client
 import os
 import configparser
 import time
-import threading
+import shutil
+import winsound
 
 
-class SystemTrayApp:
+class SystemTrayApp(QObject):
+    finished = pyqtSignal()
+    exception_signal = pyqtSignal()
+
     def __init__(self):
         super().__init__()
+        self.thread_msg = None
+        self.finished.connect(self.on_finished_show_msg, Qt.ConnectionType.QueuedConnection)
+        self.exception_signal.connect(self.show_msg_box, Qt.ConnectionType.QueuedConnection)
+        self.current_user = os.getlogin()
         self.ran_command = None
         self.exception_msg = None
         self.boot_tick_status = None
@@ -21,7 +30,6 @@ class SystemTrayApp:
         self.task_name = "WSA-Tray-Helper"
         self.process_name = "WsaClient.exe"
 
-        self.app = QApplication(sys.argv)
         self.settings = QSettings("7gxycn08@Github", "WSA-Tray-Helper")
         self.tray_icon = QSystemTrayIcon()
         self.tray_icon.setToolTip("WSA Tray Helper")
@@ -56,6 +64,11 @@ class SystemTrayApp:
         (self.menu.addAction(QIcon(r"dependencies/Resources/android.ico"), "Android Settings")
          .triggered.connect(lambda: self.open_android_settings()))
         self.menu.addSeparator()
+        self.menu.addAction(QIcon(r"dependencies/Resources/backup.ico"), "Backup WSA").triggered.connect(
+            lambda: Thread(target=self.wsa_backup, daemon=True).start())
+        self.menu.addAction(QIcon(r"dependencies/Resources/restore.ico"), "Restore WSA").triggered.connect(
+            lambda: Thread(target=self.wsa_restore, daemon=True).start())
+        self.menu.addSeparator()
         self.menu.addAction(QIcon(r"dependencies/Resources/command.ico"), "Open Commands Config").triggered.connect(
             self.open_commands_file)
         self.menu.addAction(QIcon(r"dependencies/Resources/about.ico"), "About").triggered.connect(
@@ -63,7 +76,6 @@ class SystemTrayApp:
         self.menu.addAction(QIcon(r"dependencies/Resources/exit.ico"), "Exit").triggered.connect(
             self.exit_application)
         self.tray_icon.setContextMenu(self.menu)
-        self.tray_icon.show()
         self.run_initially_at_start()
         with open('dependencies/Resources/custom.css', 'r') as file:
             self.menu.setStyleSheet(file.read())
@@ -72,7 +84,47 @@ class SystemTrayApp:
         self.list_str = self.config['ADB_COMMANDS']['at_start']
         self.commands_list = self.list_str.split(', ') if self.list_str else []
         self.ran_command = self.command_at_runtime_action.isEnabled()
-        self.app.exec()
+        self.tray_icon.show()
+
+    def on_finished_show_msg(self):
+        message_box = QMessageBox()
+        message_box.setWindowTitle("WSA-Tray-Helper")
+        message_box.setWindowIcon(QIcon(r"dependencies/Resources/Icon1.ico"))
+        message_box.setFixedSize(400, 200)
+        message_box.setIcon(QMessageBox.Icon.Information)
+        message_box.setText(f"{self.thread_msg}")
+        winsound.MessageBeep()
+        message_box.exec()
+
+    def wsa_backup(self):
+        source_dir = (f"C:\\Users\\{self.current_user}\\AppData\\Local\\Packages"
+                      "\\MicrosoftCorporationII.WindowsSubsystemForAndroid_8wekyb3d8bbwe\\LocalCache")
+        destination_dir = os.getcwd() + "\\Backup"
+        checked_process = self.is_process_running()
+        if checked_process:
+            self.stop_wsa()
+        try:
+            shutil.copytree(source_dir, destination_dir, dirs_exist_ok=True)
+            self.thread_msg = f"WSA Backup Done."
+            self.finished.emit()
+        except Exception as e:
+            self.exception_msg = f"Backup Error: {e}"
+            self.exception_signal.emit()
+
+    def wsa_restore(self):
+        destination_dir = (f"C:\\Users\\{self.current_user}\\AppData\\Local\\Packages"
+                           "\\MicrosoftCorporationII.WindowsSubsystemForAndroid_8wekyb3d8bbwe\\LocalCache")
+        source_dir = os.getcwd() + "\\Backup"
+        checked_process = self.is_process_running()
+        if checked_process:
+            self.stop_wsa()
+        try:
+            shutil.copytree(source_dir, destination_dir, dirs_exist_ok=True)
+            self.thread_msg = f"WSA Restore Done."
+            self.finished.emit()
+        except Exception as e:
+            self.exception_msg = f"Restore Error: {e}"
+            self.exception_signal.emit()
 
     def open_commands_file(self):
         try:
@@ -85,7 +137,7 @@ class SystemTrayApp:
         self.settings.setValue("command_at_runtime", self.command_at_runtime_action.isChecked())
 
     def exit_application(self):
-        self.app.exit(0)
+        QCoreApplication.instance().quit()
 
     def start_wsa(self):
         try:
@@ -158,8 +210,7 @@ class SystemTrayApp:
         checked_process = self.is_process_running()
         if checked_process:
             if self.ran_command:
-
-                threading.Thread(target=self.process_commands, daemon=True).start()
+                Thread(target=self.process_commands, daemon=True).start()
             self.tray_icon.setIcon(QIcon(r"dependencies/Resources/Icon1.ico"))
             self.tray_icon.setToolTip("WSA Running")
         else:
@@ -251,7 +302,7 @@ class SystemTrayApp:
 
     def run_initially_at_start(self):
         try:
-            if self.is_task_installed() == True:
+            if self.is_task_installed():
                 self.start_at_boot_action.setChecked(True)
                 self.toggle_start_at_boot()
                 self.boot_tick_status = True
@@ -279,16 +330,18 @@ class SystemTrayApp:
 
     def show_msg_box(self):
         warning_message_box = QMessageBox()
-        warning_message_box.setWindowTitle("WSA-Tray Error")
+        warning_message_box.setWindowTitle("WSA-Tray-Helper Error")
         warning_message_box.setWindowIcon(QIcon(r"dependencies/Resources/Icon1.ico"))
         warning_message_box.setFixedSize(400, 200)
         warning_message_box.setIcon(QMessageBox.Icon.Critical)
         warning_message_box.setText(f"{self.exception_msg}")
+        winsound.MessageBeep()
         warning_message_box.exec()
 
 
 if __name__ == '__main__':
     ctypes.windll.shcore.SetProcessDpiAwareness(1)
     app = QApplication(sys.argv)
+    app.setQuitOnLastWindowClosed(False)
     tray_app = SystemTrayApp()
-    sys.exit(tray_app.exit_application())
+    sys.exit(app.exec())
