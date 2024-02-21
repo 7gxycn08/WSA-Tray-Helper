@@ -8,7 +8,7 @@ Start/Stop and Monitor Windows Subsystem for Android (WSA) directly from your sy
 - **Monitoring**: Visual indicators to show whether WSA is running or not.
 - **Backup and Restore**: Easily backup and restore WSA's virtual drive, preserving internal files and apps.
 
-## What's New in v1.0.1.0
+## What's New in v1.0.1.1
 
 - Replaced gui library PyQt6 with PySide6.
 - Fixed wsa status monitoring function.
