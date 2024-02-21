@@ -10,10 +10,10 @@ Start/Stop and Monitor Windows Subsystem for Android (WSA) directly from your sy
 
 ## What's New in v1.0.1.0
 
-- Added WSA Backup and Restore options.
-- Backup and restore WSA virtual drive contained in `LocalCache` folder locally.
-- Useful for preserving WSA internal files and apps during a complete reinstall.
-- Full list of changes available in [Releases](https://github.com/7gxycn08/WSA-Tray-Helper/releases/tag/v1.0.1.0).
+- Replaced gui library PyQt6 with PySide6.
+- Fixed wsa status monitoring function.
+- Added LocalState folder to backup function.
+- Full list of changes available in [Releases](https://github.com/7gxycn08/WSA-Tray-Helper/releases/tag/v1.0.1.1).
 
 ## Getting Started
 
