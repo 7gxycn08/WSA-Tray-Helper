@@ -18,7 +18,7 @@ Start/Stop and Monitor Windows Subsystem for Android (WSA) directly from your sy
 ### Installation
 
 1. Download the latest release from the [Releases page](https://github.com/7gxycn08/WSA-Tray-Helper/releases).
-2. Unzip the package and run `WSA-Tray.py`.
+2. Run `WSA-Tray-Helper-win64-setup.exe` to install WSA-Tray-Helper.
 
 ### Usage
 
