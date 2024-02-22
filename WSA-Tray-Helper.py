@@ -26,6 +26,7 @@ class SystemTrayApp(QObject):
         self.thread_msg = None
         self.finished.connect(self.on_finished_show_msg, Qt.ConnectionType.QueuedConnection)
         self.exception_signal.connect(self.show_msg_box, Qt.ConnectionType.QueuedConnection)
+        self.check_signal.connect(self.check_process, Qt.ConnectionType.QueuedConnection)
         self.current_user = os.getlogin()
         self.ran_command = None
         self.exception_msg = None
@@ -39,9 +40,9 @@ class SystemTrayApp(QObject):
         self.tray_icon.setToolTip("WSA Tray Helper")
         self.tray_icon.setIcon(QIcon(r"dependencies\Resources\Icon1.ico"))
         self.timer = QTimer()
+        # noinspection PyUnresolvedReferences
         self.timer.timeout.connect(self.check_signal)
         self.timer.start(5000)
-        self.check_signal.connect(self.check_process, Qt.ConnectionType.QueuedConnection)
         self.menu = QMenu()
         self.menu.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint, True)
         self.menu.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
@@ -102,7 +103,7 @@ class SystemTrayApp(QObject):
         message_box.exec()
 
     def wsa_backup(self):
-        checked_process = self.is_process_running("WsaClient.exe")
+        checked_process = self.is_process_running()
 
         if checked_process:
             self.stop_wsa()
@@ -117,12 +118,23 @@ class SystemTrayApp(QObject):
             shutil.copytree(source_dir, destination_dir, dirs_exist_ok=True)
             self.thread_msg = f"WSA Backup Done."
             self.finished.emit()
+        except WindowsError:
+            if r"\AppData\Local\Packages\MicrosoftCorporationII" not in self.custom_path:
+                raise Exception("Invalid Path")
+            destination_dir = os.getcwd() + r"\Backup\LocalCache"
+            source_dir = self.custom_path
+            shutil.copytree(source_dir, destination_dir, dirs_exist_ok=True)
+            destination_dir = os.getcwd() + r"\Backup\LocalState"
+            source_dir = self.custom_path.replace('LocalCache', 'LocalState')
+            shutil.copytree(source_dir, destination_dir, dirs_exist_ok=True)
+            self.thread_msg = f"WSA Backup Done."
+            self.finished.emit()
         except Exception as e:
             self.exception_msg = f"Backup Error: {e}"
             self.exception_signal.emit()
 
     def wsa_restore(self):
-        checked_process = self.is_process_running("WsaClient.exe")
+        checked_process = self.is_process_running()
 
         if checked_process:
             self.stop_wsa()
@@ -134,6 +146,17 @@ class SystemTrayApp(QObject):
             source_dir = os.getcwd() + r"\Backup\LocalState"
             destination_dir = (fr"C:\Users\{self.current_user}\AppData\Local\Packages" +
                                r"\MicrosoftCorporationII.WindowsSubsystemForAndroid_8wekyb3d8bbwe\LocalState")
+            shutil.copytree(source_dir, destination_dir, dirs_exist_ok=True)
+            self.thread_msg = f"WSA Restore Done."
+            self.finished.emit()
+        except WindowsError:
+            if r"\AppData\Local\Packages\MicrosoftCorporationII" not in self.custom_path:
+                raise Exception("Invalid Path")
+            source_dir = os.getcwd() + r"\Backup\LocalCache"
+            destination_dir = self.custom_path
+            shutil.copytree(source_dir, destination_dir, dirs_exist_ok=True)
+            source_dir = os.getcwd() + r"\Backup\LocalState"
+            destination_dir = self.custom_path.replace('LocalCache', 'LocalState')
             shutil.copytree(source_dir, destination_dir, dirs_exist_ok=True)
             self.thread_msg = f"WSA Restore Done."
             self.finished.emit()
@@ -194,7 +217,7 @@ class SystemTrayApp(QObject):
         subprocess.Popen("start https://github.com/7gxycn08/WSA-Tray-Helper",
                          shell=True, creationflags=subprocess.CREATE_NEW_CONSOLE)
 
-    def is_process_running(self, process_name):
+    def is_process_running(self):
         process_query_limited_information = 0x1000
 
         try:
@@ -218,7 +241,7 @@ class SystemTrayApp(QObject):
 
                     if success:
                         process_name_actual = os.path.basename(buffer.value)
-                        if process_name_actual == process_name:
+                        if process_name_actual == self.process_name:
                             return True
             return False
 
@@ -237,7 +260,7 @@ class SystemTrayApp(QObject):
                 time.sleep(3)
 
     def check_process(self):
-        checked_process = self.is_process_running("WsaClient.exe")
+        checked_process = self.is_process_running()
         if checked_process:
             if self.ran_command:
                 Thread(target=self.process_commands, daemon=True).start()
