@@ -29,9 +29,9 @@ Start/Stop and Monitor Windows Subsystem for Android (WSA) directly from your sy
 
 ### Adding Custom Commands
 
-1. Navigate to the `Dependencies` folder and open `Commands.ini`.
+1. Navigate to the `dependencies` folder and open `Commands.ini`.
 2. Under the `at_start` key, add your CMD commands (e.g., `at_start = command1, command2`).
-3. Check the `Custom Commands` box in the tray menu to execute these commands when WSA starts.
+3. Check the `Custom Commands` box in the tray menu to execute these commands everytime WSA starts.
 
 ## Preview
 
