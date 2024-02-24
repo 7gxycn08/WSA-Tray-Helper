@@ -7,6 +7,7 @@ Start/Stop and Monitor Windows Subsystem for Android (WSA) directly from your sy
 - **Easy Start/Stop**: Control WSA directly from the system tray with a simple click.
 - **Monitoring**: Visual indicators to show whether WSA is running or not.
 - **Backup and Restore**: Easily backup and restore WSA's virtual drive, preserving internal files and apps.
+- **Backups are saved in this path by default:** `C:\Program Files (x86)\WSA-Tray-Helper\Backup`
 
 ## What's New in v1.0.1.2
 
