@@ -33,7 +33,12 @@ Start/Stop and Monitor Windows Subsystem for Android (WSA) directly from your sy
 2. Under the `at_start` key, add your CMD commands (e.g., `at_start = command1, command2`).
 3. Check the `Custom Commands` box in the tray menu to execute these commands everytime WSA starts.
 
-You can run something like `adb connect 127.0.0.1:58526, adb shell sh /storage/emulated/0/Android/data/moe.shizuku.privileged.api/start.sh, adb kill-server`
+You can run something like: 
+```
+adb connect 127.0.0.1:58526, 
+adb shell sh /storage/emulated/0/Android/data/moe.shizuku.privileged.api/start.sh, 
+adb kill-server
+```
 
 ## Preview
 
